@@ -307,6 +307,102 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 #split-inner-right .kpi-value{font-size:1.5rem!important;}
 #split-inner-left .members-grid,
 #split-inner-right .members-grid{grid-template-columns:repeat(2,1fr)!important;}
+
+/* ── ABA CRM ── */
+.crm-kanban-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:0.5rem 0;}
+.crm-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.crm-col-header{padding:0.75rem 1rem;font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.crm-col-body{padding:0.5rem;display:flex;flex-direction:column;gap:0.5rem;min-height:60px;}
+.crm-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;cursor:default;}
+.crm-card-name{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:0.25rem;}
+.crm-card-info{font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem;}
+.crm-card-actions{display:flex;gap:0.4rem;flex-wrap:wrap;}
+.crm-btn{font-size:0.68rem;padding:0.2rem 0.55rem;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:'Manrope',sans-serif;}
+.crm-btn:hover{background:rgba(204,0,255,0.12);border-color:rgba(204,0,255,0.4);color:var(--accent);}
+.crm-btn.primary{background:rgba(204,0,255,0.15);border-color:rgba(204,0,255,0.4);color:var(--accent);}
+.crm-loading{text-align:center;color:var(--muted);font-size:0.8rem;padding:2rem;}
+.crm-link-copied{font-size:0.7rem;color:#00e5a0;margin-left:0.3rem;display:none;}
+
+/* ── MODO RASTREIO CLIENTE ── */
+/* ── RASTREIO OVERLAY ─────────────────────────────────────────────────── */
+#rastreio-overlay{display:none;position:fixed;inset:0;background:#08080f;z-index:9999;overflow-y:auto;font-family:'Manrope',sans-serif;}
+#rastreio-overlay.active{display:flex;flex-direction:column;min-height:100vh;}
+.r-header{background:rgba(10,10,20,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(160,32,240,0.2);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.r-logo{display:flex;align-items:center;gap:0.5rem;}
+.r-logo-text{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:800;color:#A020F0;letter-spacing:0.05em;}
+.r-logo-dot{width:6px;height:6px;border-radius:50%;background:#A020F0;box-shadow:0 0 8px #A020F0;}
+.r-client-name{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;color:#fff;text-align:center;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.r-updated{font-size:0.68rem;color:#444;text-align:right;}
+.r-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;padding:0 1.5rem;background:#09090f;}
+.r-tab{padding:0.8rem 1.2rem;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:#444;cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;transition:all 0.2s;letter-spacing:0.02em;}
+.r-tab.active{color:#A020F0;border-bottom-color:#A020F0;}
+.r-tab:hover:not(.active){color:#888;}
+.r-body{flex:1;padding:2rem 1.5rem 3rem;max-width:780px;margin:0 auto;width:100%;}
+
+/* Hero status card */
+.r-hero{background:linear-gradient(135deg,rgba(160,32,240,0.12),rgba(10,10,20,0.8));border:1px solid rgba(160,32,240,0.3);border-radius:20px;padding:1.8rem 2rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden;}
+.r-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(160,32,240,0.15),transparent 70%);pointer-events:none;}
+.r-hero-icon{width:60px;height:60px;border-radius:16px;background:rgba(160,32,240,0.2);border:1.5px solid rgba(160,32,240,0.4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;}
+.r-hero-content{flex:1;min-width:0;}
+.r-hero-label{font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#A020F0;margin-bottom:0.35rem;}
+.r-hero-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:0.35rem;line-height:1.2;}
+.r-hero-desc{font-size:0.82rem;color:#777;line-height:1.55;}
+.r-hero-badge{background:rgba(160,32,240,0.18);border:1px solid rgba(160,32,240,0.35);border-radius:100px;padding:0.28rem 0.85rem;font-size:0.7rem;font-weight:700;color:#C080FF;white-space:nowrap;flex-shrink:0;}
+
+/* Timeline */
+.r-timeline{display:flex;flex-direction:column;gap:0;}
+.r-step{display:grid;grid-template-columns:48px 1fr;gap:0;position:relative;}
+.r-step-left{display:flex;flex-direction:column;align-items:center;}
+.r-step-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;position:relative;z-index:2;transition:all 0.3s;}
+.r-step-dot.done{background:#0d2a1e;border:2px solid #00c97a;color:#00c97a;font-size:0.85rem;}
+.r-step-dot.active{background:rgba(160,32,240,0.2);border:2px solid #A020F0;box-shadow:0 0 20px rgba(160,32,240,0.35);color:#A020F0;font-size:0.95rem;}
+.r-step-dot.pending{background:#111;border:1.5px solid #222;color:#333;}
+.r-step-connector{flex:1;width:2px;margin:4px auto;min-height:28px;}
+.r-step-connector.done{background:linear-gradient(to bottom,#00c97a,#00c97a);}
+.r-step-connector.active{background:linear-gradient(to bottom,#A020F0,#333);}
+.r-step-connector.pending{background:#1e1e1e;}
+.r-step-right{padding:0.25rem 0 1.6rem 1rem;}
+.r-step-right.active{padding-bottom:1.8rem;}
+.r-step-right.last{padding-bottom:0.5rem;}
+.r-step-name{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;margin-bottom:0.2rem;line-height:1.3;}
+.r-step-name.done{color:#00c97a;}
+.r-step-name.active{color:#C080FF;}
+.r-step-name.pending{color:#333;}
+.r-step-desc{font-size:0.77rem;line-height:1.55;margin-bottom:0.4rem;}
+.r-step-desc.done{color:#2d6b50;}
+.r-step-desc.active{color:#666;}
+.r-step-desc.pending{color:#2a2a2a;}
+/* Previsão de data na timeline */
+.r-step-date{display:inline-flex;align-items:center;gap:0.35rem;font-size:0.68rem;font-weight:600;padding:0.2rem 0.65rem;border-radius:100px;margin-top:0.1rem;}
+.r-step-date.done{background:#0d2a1e;color:#00c97a;border:1px solid rgba(0,201,122,0.25);}
+.r-step-date.active{background:rgba(160,32,240,0.15);color:#C080FF;border:1px solid rgba(160,32,240,0.3);}
+.r-step-date.pending{background:#111;color:#333;border:1px solid #1e1e1e;}
+.r-step-date.feriado{background:rgba(255,92,92,0.1);color:#ff7070;border:1px solid rgba(255,92,92,0.25);}
+
+/* Calendário de previsão */
+.r-cal-section{background:#0f0f1a;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1.4rem 1.6rem;margin-top:2rem;}
+.r-cal-title{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;color:#fff;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+.r-cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.6rem;}
+.r-cal-item{background:#0a0a14;border:1px solid #1e1e2e;border-radius:10px;padding:0.7rem 0.85rem;transition:border-color 0.2s;}
+.r-cal-item.done{border-color:rgba(0,201,122,0.25);}
+.r-cal-item.active{border-color:rgba(160,32,240,0.4);background:rgba(160,32,240,0.06);}
+.r-cal-item-label{font-size:0.63rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.25rem;}
+.r-cal-item-label.done{color:#00c97a;}
+.r-cal-item-label.active{color:#A020F0;}
+.r-cal-item-label.pending{color:#333;}
+.r-cal-item-date{font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;}
+.r-cal-item-date.done{color:#fff;}
+.r-cal-item-date.active{color:#fff;}
+.r-cal-item-date.pending{color:#2a2a2a;}
+.r-cal-item-sub{font-size:0.63rem;margin-top:0.15rem;}
+.r-cal-item-sub.done{color:#2d6b50;}
+.r-cal-item-sub.active{color:#664d99;}
+.r-cal-item-sub.pending{color:#1e1e1e;}
+.r-cal-warning{font-size:0.7rem;color:#ff7070;display:flex;align-items:center;gap:0.4rem;margin-top:0.8rem;background:rgba(255,92,92,0.08);border:1px solid rgba(255,92,92,0.2);border-radius:8px;padding:0.5rem 0.75rem;}
+
+.rastreio-loading{text-align:center;color:#444;padding:4rem 2rem;font-size:0.85rem;}
+.rastreio-error{text-align:center;color:#ff5c5c;padding:3rem;font-size:0.85rem;}
+
 </style>
 </head>
 <body>
@@ -342,6 +438,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <button class="tab-btn active" id="tab-eq" onclick="swTab('eq',this)">👥 Equipe</button>
       <button class="tab-btn" id="tab-fin" onclick="swTabFin(this)">💰 Financeiro</button>
       <button class="tab-btn" id="tab-vnd" onclick="swTab('vnd',this)">📈 Vendas</button>
+      <button class="tab-btn" id="tab-crm" onclick="swTabCRM(this)">🤝 CRM</button>
     </div>
     <div class="live-dot" id="live-dot" style="display:none;"></div>
     <div class="topbar-title" id="page-title">Dashboard de Equipe</div>
@@ -883,6 +980,22 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     </div>
   </div>
 
+</div>
+
+<!-- ════ PAGE CRM ════ -->
+<div class="page" id="page-crm">
+  <div style="padding:0.5rem 0 1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);">Implementações CRM</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.2rem;">Kanbans ao vivo · ClickUp</div>
+      </div>
+      <button onclick="syncCRM()" style="background:rgba(204,0,255,0.15);border:1px solid rgba(204,0,255,0.4);border-radius:8px;color:var(--accent);font-family:'Manrope',sans-serif;font-size:0.75rem;font-weight:600;padding:0.4rem 0.9rem;cursor:pointer;">↻ Atualizar</button>
+    </div>
+    <div id="crm-kanban-wrap">
+      <div class="crm-loading">Conecte o ClickUp para carregar as implementações.</div>
+    </div>
+  </div>
 </div>
 
 <!-- ── MODAL NOVO LANÇAMENTO ── -->
@@ -1742,8 +1855,8 @@ function calcVendasKPIs(tasks){
   // Metas para comparar
   var crmMetaImpl  = _isAnoTodo ? (_metasAno.impl_meta || _metas.crm_impl || 10) : (_metas.crm_impl || 10);
   var mktMetaContr = _isAnoTodo ? (_metasAno.contratos_meta || _metas.mkt_contr || 9) : (_metas.mkt_contr || 9);
-  var crmMetaValor = _isAnoTodo ? (_metasAno.crm_val_meta || _metas.crm_valor || 80000) : (_metas.crm_valor || 80000);
-  var mktMetaValor = _isAnoTodo ? (_metasAno.mrr_meta || _metas.mkt_valor || 70000) : (_metas.mkt_valor || 70000);
+  var crmMetaValor = _isAnoTodo ? (_metasAno.crm_val_meta || 0) : (_metas.crm_valor || 0);
+  var mktMetaValor = _isAnoTodo ? (_metasAno.mrr_meta || 0) : (_metas.mkt_valor || 0);
 
   // Título do painel de metas
   ss('meta-crm-mes', _isAnoTodo ? 'Ano '+_metaAno : ({'01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'}[crmMesSel]||crmMesSel)+' '+_metaAno);
@@ -3081,7 +3194,7 @@ function swTab(tab, btn){
   var acts   = {eq:'+ Nova Tarefa', fin:'+ Lançamento', vnd:'+ Novo Lead'};
   var titleEl = document.getElementById('page-title');
   if(titleEl) titleEl.textContent = titles[tab]||'';
-  var actBtn  = document.getElementById('action-btn');
+  var actBtn  = document.getElementById('btn-act');
   if(actBtn)  actBtn.textContent = acts[tab]||'';
 
   // Inicializar financeiro na primeira vez
@@ -3188,7 +3301,7 @@ function _getVndAno(){
 
 function getMetaAno(ano){
   var all = JSON.parse(localStorage.getItem('metas_anuais')||'{}');
-  return all[ano] || { mrr_meta: 0, fat_meta: 0, contratos_meta: 0, impl_meta: 0 };
+  return all[ano] || { mrr_meta: 0, fat_meta: 0, contratos_meta: 0, impl_meta: 0, crm_val_meta: 0 };
 }
 function saveMetaAno(ano, obj){
   var all = JSON.parse(localStorage.getItem('metas_anuais')||'{}');
@@ -3344,14 +3457,22 @@ function salvarModalMetas(){
 function atualizarDisplayMetas(){
   var mes2d = _getVndMes2d();
   var ano   = _getVndAno();
-  var m = getMetaMes(mes2d, ano);
+  // Determinar se está em modo "Ano Todo"
+  var isAnoTodo = (typeof crmMesSel !== 'undefined' && crmMesSel === 'todos');
+  var m  = getMetaMes(mes2d, ano);
+  var ma = getMetaAno(ano);
   var ss = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
-  ss('crm-meta-total-disp', m.crm_impl);
-  ss('crm-meta-bar-meta',  'Meta: '+m.crm_impl+' impl.');
-  ss('crm-meta-val-disp',  'R$'+(m.crm_valor/1000).toFixed(0)+'k');
-  ss('mkt-meta-total-disp', m.mkt_contr);
-  ss('mkt-meta-bar-meta',  'Meta: '+m.mkt_contr+' contratos');
-  ss('mkt-meta-val-disp',  'R$'+(m.mkt_valor/1000).toFixed(0)+'k');
+  // Se Ano Todo, usar metas anuais; se zero/não definido, cair no mensal
+  var crmImpl  = isAnoTodo ? (ma.impl_meta  || m.crm_impl)  : m.crm_impl;
+  var crmValor = isAnoTodo ? (ma.crm_val_meta || m.crm_valor) : m.crm_valor;
+  var mktContr = isAnoTodo ? (ma.contratos_meta || m.mkt_contr) : m.mkt_contr;
+  var mktValor = isAnoTodo ? (ma.mrr_meta   || m.mkt_valor)  : m.mkt_valor;
+  ss('crm-meta-total-disp', crmImpl);
+  ss('crm-meta-bar-meta',  'Meta: '+crmImpl+' impl.');
+  ss('crm-meta-val-disp',  'R$'+(crmValor/1000).toFixed(0)+'k');
+  ss('mkt-meta-total-disp', mktContr);
+  ss('mkt-meta-bar-meta',  'Meta: '+mktContr+' contratos');
+  ss('mkt-meta-val-disp',  'R$'+(mktValor/1000).toFixed(0)+'k');
 }
 
 // Compatibilidade backward
@@ -3717,6 +3838,434 @@ function swTabFin(btn){
   }
 }
 
+// ── ABA CRM ────────────────────────────────────────────────────────────────
+function swTabCRM(btn){
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var page = document.getElementById('page-crm');
+  if(page) page.classList.add('active');
+  document.querySelectorAll('.ftabs').forEach(function(f){ f.style.display='none'; });
+  var anoEl = document.getElementById('ft-vnd-ano');
+  if(anoEl) anoEl.style.display = 'none';
+  var recEl = document.getElementById('btn-recorrentes');
+  if(recEl) recEl.style.display = 'none';
+  var titleEl = document.getElementById('page-title');
+  if(titleEl) titleEl.textContent = 'Implementações CRM';
+  // Mostrar/ocultar botão de ação
+  var actBtn = document.getElementById('btn-act');
+  if(actBtn){ actBtn.textContent = '+ Novo Cliente'; actBtn.style.display = 'inline-flex'; }
+  // Carregar se já conectado
+  if(TOKEN) syncCRM();
+}
+
+// Kanbans CRM
+var CRM_KANBANS = [
+  { key:'novo_cliente',        label:'🆕 Novo Cliente',          color:'#6b7280' },
+  { key:'em_construcao',       label:'🔨 Em Construção',         color:'#f59e0b' },
+  { key:'aguardando_aprovacao',label:'🕐 Aguardando Aprovação',  color:'#3b82f6' },
+  { key:'em_ajuste',           label:'✏️ Em Ajuste',             color:'#ec4899' },
+  { key:'em_treinamento',      label:'🎓 Em Treinamento',        color:'#8b5cf6' },
+  { key:'concluido',           label:'✅ Concluído',              color:'#00e5a0' }
+];
+
+var CRM_TASKS = [];
+
+async function syncCRM(){
+  var wrap = document.getElementById('crm-kanban-wrap');
+  if(!TOKEN){ if(wrap) wrap.innerHTML = '<div class="crm-loading">Conecte o ClickUp para carregar as implementações.</div>'; return; }
+  if(wrap) wrap.innerHTML = '<div class="crm-loading">Carregando implementações...</div>';
+  try{
+    // Buscar espaço CLIENTES
+    var spaces = await api('team/'+TEAM_ID+'/space?archived=false');
+    var clientes = spaces.spaces.find(function(s){ return s.name.toUpperCase() === 'CLIENTES'; })
+                || spaces.spaces.find(function(s){ return s.name.toUpperCase().includes('CLIENTES') && !s.name.toUpperCase().includes('CRONOGRAMA'); });
+    if(!clientes){ if(wrap) wrap.innerHTML = '<div class="crm-loading">Espaço "CLIENTES" não encontrado.</div>'; return; }
+
+    // Buscar pasta FUNIL CRM
+    var fRes = await api('space/'+clientes.id+'/folder?archived=false').catch(function(){ return {folders:[]}; });
+    var funil = (fRes.folders||[]).find(function(f){ return f.name.toUpperCase().includes('FUNIL') && f.name.toUpperCase().includes('CRM'); })
+             || (fRes.folders||[]).find(function(f){ return f.name.toUpperCase().includes('CRM'); });
+
+    var crmLists = [];
+    if(funil){
+      var lRes = await api('folder/'+funil.id+'/list?archived=false').catch(function(){ return {lists:[]}; });
+      crmLists = lRes.lists || [];
+    }
+    // Fallback: listas diretas do espaço com "CRM" no nome
+    if(crmLists.length === 0){
+      var lDirect = await api('space/'+clientes.id+'/list?archived=false').catch(function(){ return {lists:[]}; });
+      crmLists = (lDirect.lists||[]).filter(function(l){ return l.name.toUpperCase().includes('CRM'); });
+    }
+
+    // Buscar tasks de todas as listas CRM
+    CRM_TASKS = [];
+    for(var i=0; i<crmLists.length; i++){
+      var tr = await api('list/'+crmLists[i].id+'/task?page=0&include_closed=true').catch(function(){ return {tasks:[]}; });
+      (tr.tasks||[]).forEach(function(t){ CRM_TASKS.push(t); });
+    }
+    renderCRMKanban();
+  } catch(e){
+    console.error('syncCRM error:', e);
+    if(wrap) wrap.innerHTML = '<div class="crm-loading" style="color:#ff5c5c;">Erro ao carregar. Tente novamente.</div>';
+  }
+}
+
+function normalizarStatusCRM(status){
+  if(!status) return 'novo_cliente';
+  var s = status.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(s.includes('novo') || s.includes('pix') || s.includes('novo cliente')) return 'novo_cliente';
+  if(s.includes('construc') || s.includes('building') || s.includes('desenvolvend')) return 'em_construcao';
+  if(s.includes('aprovac') || s.includes('aguardand')) return 'aguardando_aprovacao';
+  if(s.includes('ajuste') || s.includes('ajustando') || s.includes('revisao')) return 'em_ajuste';
+  if(s.includes('treinam') || s.includes('training')) return 'em_treinamento';
+  if(s.includes('conclu') || s.includes('done') || s.includes('entregue')) return 'concluido';
+  return 'novo_cliente';
+}
+
+function renderCRMKanban(){
+  var wrap = document.getElementById('crm-kanban-wrap');
+  if(!wrap) return;
+
+  // Agrupar tasks por kanban
+  var grupos = {};
+  CRM_KANBANS.forEach(function(k){ grupos[k.key] = []; });
+  CRM_TASKS.forEach(function(t){
+    var norm = normalizarStatusCRM(t.status && t.status.status);
+    if(grupos[norm]) grupos[norm].push(t);
+    else grupos['novo_cliente'].push(t);
+  });
+
+  var html = '<div class="crm-kanban-grid">';
+  CRM_KANBANS.forEach(function(col){
+    var tasks = grupos[col.key] || [];
+    html += '<div class="crm-col">';
+    html += '<div class="crm-col-header" style="border-left:3px solid '+col.color+';">';
+    html += '<span>'+col.label+'</span>';
+    html += '<span style="background:'+col.color+'22;color:'+col.color+';font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:100px;">'+tasks.length+'</span>';
+    html += '</div>';
+    html += '<div class="crm-col-body">';
+    if(tasks.length === 0){
+      html += '<div style="font-size:0.72rem;color:var(--muted);text-align:center;padding:0.75rem;">vazio</div>';
+    } else {
+      tasks.forEach(function(t){
+        var nome = t.name || 'Sem nome';
+        var id = t.id || '';
+        var linkSalvo = localStorage.getItem('crm_link_'+id) || '';
+        html += '<div class="crm-card">';
+        html += '<div class="crm-card-name">'+nome+'</div>';
+        html += '<div class="crm-card-info">';
+        if(t.assignees && t.assignees.length) html += '👤 '+(t.assignees[0].username||t.assignees[0].email||'');
+        html += '</div>';
+        html += '<div class="crm-card-actions">';
+        if(linkSalvo){
+          html += '<button class="crm-btn primary" onclick="copiarLink(&apos;'+linkSalvo+'&apos;,&apos;lnk_'+id+'&apos;)">🔗 Copiar link</button>';
+        } else {
+          html += '<button class="crm-btn primary" onclick="gerarLink(&apos;'+id+'&apos;,&apos;'+nome.replace(/'/g,"&#39;")+'&apos;)">✨ Gerar link</button>';
+        }
+        html += '<button class="crm-btn" onclick="abrirClickUp(&apos;'+id+'&apos;)">↗ ClickUp</button>';
+        html += '<span class="crm-link-copied" id="lnk_'+id+'">✓ Copiado!</span>';
+        html += '</div></div>';
+      });
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function gerarLink(taskId, taskNome){
+  var codigo = taskId + '_' + Math.random().toString(36).substr(2,6);
+  // Usar URL pública hospedada no GitHub Pages
+  var baseUrl = 'https://onsystemck-boop.github.io/dashboard.oficial/';
+  var link = baseUrl + '?r=' + codigo;
+  localStorage.setItem('crm_link_'+taskId, link);
+  localStorage.setItem('crm_rcode_'+codigo, JSON.stringify({taskId:taskId, nome:taskNome}));
+  renderCRMKanban();
+  setTimeout(function(){ copiarLink(link, 'lnk_'+taskId); }, 100);
+}
+
+function copiarLink(link, spanId){
+  navigator.clipboard.writeText(link).then(function(){
+    var el = document.getElementById(spanId);
+    if(el){ el.style.display='inline'; setTimeout(function(){ el.style.display='none'; }, 2000); }
+  }).catch(function(){
+    prompt('Copie o link abaixo:', link);
+  });
+}
+
+function abrirClickUp(taskId){
+  window.open('https://app.clickup.com/t/'+taskId, '_blank', 'noopener');
+}
+
+// ── MODO RASTREIO CLIENTE ──────────────────────────────────────────────────
+var RASTREIO_STEPS = [
+  { key:'novo_cliente',        icon:'📋', label:'PIX Confirmado', desc:'Pagamento recebido. Sua implementação foi agendada.' },
+  { key:'em_construcao',       icon:'🔨', label:'Em Construção', desc:'Estamos configurando seu funil, automações e integrações.' },
+  { key:'aguardando_aprovacao',icon:'🕐', label:'Aguardando Aprovação', desc:'Implementação pronta! Aguardando sua aprovação.' },
+  { key:'em_ajuste',           icon:'✏️', label:'Em Ajuste', desc:'Realizando os ajustes solicitados.' },
+  { key:'em_treinamento',      icon:'🎓', label:'Em Treinamento', desc:'Treinando seu time para usar o CRM.' },
+  { key:'concluido',           icon:'🚀', label:'Entregue!', desc:'Implementação concluída. Bem-vindo ao novo CRM!' }
+];
+var RASTREIO_STEP_LABELS = {'novo_cliente':0,'em_construcao':1,'aguardando_aprovacao':2,'em_ajuste':3,'em_treinamento':4,'concluido':5};
+
+var _rastreioPlanoSel = '12m';
+
+function switchRastreioTab(tab, btn){
+  document.querySelectorAll('.r-tab').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  document.getElementById('rastreio-body-status').style.display = tab==='status' ? 'block' : 'none';
+  document.getElementById('rastreio-body-simulador').style.display = tab==='simulador' ? 'block' : 'none';
+  if(tab==='simulador') calcRSimulador();
+}
+
+async function initRastreio(){
+  var params = new URLSearchParams(window.location.search);
+  var rcode = params.get('r');
+  if(!rcode) return;
+
+  // Mostrar overlay imediatamente
+  var overlay = document.getElementById('rastreio-overlay');
+  overlay.classList.add('active');
+
+  // Buscar dados do código
+  var dadosStr = localStorage.getItem('crm_rcode_'+rcode);
+  if(!dadosStr){
+    document.getElementById('rastreio-nome-cliente').textContent = 'Implementação não encontrada';
+    document.getElementById('rastreio-content').innerHTML = '<div class="rastreio-error">Link inválido ou expirado.</div>';
+    return;
+  }
+
+  var dados = JSON.parse(dadosStr);
+  document.getElementById('rastreio-nome-cliente').textContent = dados.nome || 'Seu CRM';
+
+  // Buscar status no ClickUp via API pública não é possível sem token
+  // Usamos o token salvo no localStorage (do dashboard interno)
+  var token = localStorage.getItem('cu_token');
+  if(!token){
+    renderRastreioStatic(dados, 'em_construcao');
+    return;
+  }
+
+  document.getElementById('rastreio-content').innerHTML = '<div class="rastreio-loading">Buscando status...</div>';
+
+  try{
+    var taskRes = await fetch('https://api.clickup.com/api/v2/task/'+dados.taskId+'?custom_fields=false', {headers:{Authorization:token}});
+    if(taskRes.ok){
+      var task = await taskRes.json();
+      var statusRaw = task.status && task.status.status || 'novo cliente';
+      renderRastreioStatic(dados, normalizarStatusCRM(statusRaw));
+    } else {
+      renderRastreioStatic(dados, 'em_construcao');
+    }
+  } catch(e){
+    renderRastreioStatic(dados, 'em_construcao');
+  }
+}
+
+// ── Feriados nacionais BR (fixos) + calcula dias úteis ─────────────────
+var FERIADOS_BR_FIXOS = [
+  '01-01','04-21','05-01','09-07','10-12','11-02','11-15','11-20','12-25'
+];
+// Semana Santa: variável, calculada por Páscoa
+function calcPascoa(ano){
+  var a=ano%19,b=Math.floor(ano/100),c=ano%100;
+  var d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
+  var g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30;
+  var i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7;
+  var m=Math.floor((a+11*h+22*l)/451);
+  var mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
+  return new Date(ano,mes-1,dia);
+}
+function isFeriadoNacional(d){
+  var mmdd=(d.getMonth()+1+'').padStart(2,'0')+'-'+(d.getDate()+'').padStart(2,'0');
+  if(FERIADOS_BR_FIXOS.indexOf(mmdd)>=0) return true;
+  // Páscoa + sexta-feira santa + corpus christi
+  var pascoa=calcPascoa(d.getFullYear());
+  var sextaSanta=new Date(pascoa); sextaSanta.setDate(pascoa.getDate()-2);
+  var carnaval2=new Date(pascoa); carnaval2.setDate(pascoa.getDate()-48);
+  var corpus=new Date(pascoa); corpus.setDate(pascoa.getDate()+60);
+  function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+  return sameDay(d,pascoa)||sameDay(d,sextaSanta)||sameDay(d,corpus)||sameDay(d,carnaval2);
+}
+function isDiaUtil(d){
+  var dow=d.getDay();
+  if(dow===0||dow===6) return false;
+  return !isFeriadoNacional(d);
+}
+function addDiasUteis(start, dias){
+  var d=new Date(start); var added=0;
+  while(added<dias){
+    d.setDate(d.getDate()+1);
+    if(isDiaUtil(d)) added++;
+  }
+  return d;
+}
+function fmtData(d){
+  return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+}
+function fmtDataShort(d){
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+}
+
+// Dias úteis estimados por etapa (após início do contrato)
+var STEP_DURACAO_DU = [2, 5, 2, 3, 2, 1]; // novo_cliente, construcao, aguardando, ajuste, treinamento, concluido
+
+function renderRastreioStatic(dados, statusKey){
+  var stepIdx = RASTREIO_STEP_LABELS[statusKey] || 0;
+  var stepAtual = RASTREIO_STEPS[stepIdx];
+  var hoje = new Date();
+
+  // Calcular datas previstas para cada etapa a partir de hoje - stepIdx etapas
+  // (estimamos que as etapas anteriores já duraram o tempo padrão)
+  var datas = [];
+  var cursor = new Date(hoje);
+  // Retroceder para estimar início
+  for(var r=stepIdx; r>0; r--){
+    var du = STEP_DURACAO_DU[r-1];
+    cursor.setDate(cursor.getDate() - du*1.4); // aproximação
+  }
+  for(var i=0; i<RASTREIO_STEPS.length; i++){
+    datas.push(new Date(cursor));
+    var du = STEP_DURACAO_DU[i]||2;
+    cursor = addDiasUteis(cursor, du);
+  }
+  var dataEntrega = datas[RASTREIO_STEPS.length-1];
+
+  // ── HERO ────────────────────────────────────────────────────────────────
+  var progresso = Math.round((stepIdx / (RASTREIO_STEPS.length-1)) * 100);
+  var html = '<div class="r-hero">';
+  html += '<div class="r-hero-icon">'+stepAtual.icon+'</div>';
+  html += '<div class="r-hero-content">';
+  html += '<div class="r-hero-label">Status atual</div>';
+  html += '<div class="r-hero-title">'+stepAtual.label+'</div>';
+  html += '<div class="r-hero-desc">'+stepAtual.desc+'</div>';
+  html += '</div>';
+  html += '<div class="r-hero-badge">'+progresso+'% concluído</div>';
+  html += '</div>';
+
+  // Barra de progresso
+  html += '<div style="background:#111;border-radius:100px;height:4px;margin-bottom:2rem;overflow:hidden;">';
+  html += '<div style="height:100%;width:'+progresso+'%;background:linear-gradient(to right,#A020F0,#C080FF);border-radius:100px;transition:width 0.5s;"></div>';
+  html += '</div>';
+
+  // ── TIMELINE ────────────────────────────────────────────────────────────
+  html += '<div class="r-timeline">';
+  RASTREIO_STEPS.forEach(function(step, i){
+    var cls = i < stepIdx ? 'done' : (i === stepIdx ? 'active' : 'pending');
+    var isLast = i === RASTREIO_STEPS.length - 1;
+    var dotIcon = cls==='done' ? '✓' : (cls==='active' ? step.icon : '');
+    var dataStep = datas[i];
+    var isFer = !isDiaUtil(dataStep) && cls !== 'done';
+    var dataLabel = '';
+    if(cls==='done') dataLabel='<span class="r-step-date done">✓ Concluído</span>';
+    else if(cls==='active') dataLabel='<span class="r-step-date active">⚡ Em andamento · prev. '+fmtDataShort(cursor)+'</span>';
+    else {
+      var dStr = fmtDataShort(dataStep);
+      if(isFer) dataLabel='<span class="r-step-date feriado">⚠ '+dStr+' (feriado/fim de semana, ajustado)</span>';
+      else dataLabel='<span class="r-step-date pending">📅 Prev. '+dStr+'</span>';
+    }
+
+    html += '<div class="r-step">';
+    html += '<div class="r-step-left">';
+    html += '<div class="r-step-dot '+cls+'">'+dotIcon+'</div>';
+    if(!isLast) html += '<div class="r-step-connector '+cls+'"></div>';
+    html += '</div>';
+    html += '<div class="r-step-right '+(cls)+' '+(isLast?'last':'')+'  ">';
+    html += '<div class="r-step-name '+cls+'">'+step.label+'</div>';
+    html += '<div class="r-step-desc '+cls+'">'+step.desc+'</div>';
+    html += dataLabel;
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ── CALENDÁRIO DE PREVISÃO ───────────────────────────────────────────────
+  html += '<div class="r-cal-section">';
+  html += '<div class="r-cal-title">📅 Calendário de previsão</div>';
+  html += '<div class="r-cal-grid">';
+  RASTREIO_STEPS.forEach(function(step, i){
+    var cls = i < stepIdx ? 'done' : (i === stepIdx ? 'active' : 'pending');
+    var d = datas[i];
+    var subText = '';
+    if(!isDiaUtil(d) && cls !== 'done'){
+      // Ajustar para próximo dia útil
+      var dAdj = addDiasUteis(new Date(d.getTime()-86400000), 1);
+      subText = '→ '+fmtDataShort(dAdj)+' (ajustado)';
+    } else {
+      var dow = d.getDay();
+      var dows = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      subText = dows[dow];
+    }
+    html += '<div class="r-cal-item '+cls+'">';
+    html += '<div class="r-cal-item-label '+cls+'">'+step.label+'</div>';
+    html += '<div class="r-cal-item-date '+cls+'">'+fmtDataShort(d)+'</div>';
+    html += '<div class="r-cal-item-sub '+cls+'">'+subText+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Aviso entrega estimada
+  html += '<div style="margin-top:1rem;font-size:0.75rem;color:#555;display:flex;align-items:center;gap:0.4rem;">';
+  html += '<span>🚀</span><span>Entrega estimada: <strong style="color:#888;">'+fmtData(dataEntrega)+'</strong> · Estimativa baseada em dias úteis, pode variar conforme aprovações.</span>';
+  html += '</div>';
+  html += '</div>'; // r-cal-section
+
+  document.getElementById('rastreio-content').innerHTML = html;
+}
+
+// ── SIMULADOR RASTREIO ─────────────────────────────────────────────────────
+var RSIM_PLANOS = [
+  {key:'3m',  pagas:3,  total:3,  nome:'3 meses',  ganho:'',               rec:false},
+  {key:'6m',  pagas:6,  total:7,  nome:'6 meses',  ganho:'+1 mês grátis',  rec:false},
+  {key:'9m',  pagas:8,  total:9,  nome:'9 meses',  ganho:'paga equiv. a 8',rec:false},
+  {key:'12m', pagas:10, total:12, nome:'1 ano',     ganho:'paga apenas 10', rec:true },
+  {key:'24m', pagas:18, total:24, nome:'2 anos',    ganho:'paga equiv. a 18',rec:false}
+];
+
+function fmtR(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+function calcRSimulador(){
+  var usuarios = parseFloat(document.getElementById('rsim-usuarios').value)||1;
+  var planoUSD = parseFloat(document.getElementById('rsim-plano').value)||25;
+  var cotacao  = parseFloat(document.getElementById('rsim-cotacao').value)||5.80;
+  var mensal_base = usuarios * planoUSD * cotacao;
+  var grid = document.getElementById('rsim-grid');
+  if(!grid) return;
+  var html = '';
+  RSIM_PLANOS.forEach(function(p){
+    var total_rs = p.pagas * mensal_base;
+    var mensal_ef = total_rs / p.total;
+    var isSel = _rastreioPlanoSel === p.key;
+    var bg = isSel ? 'background:rgba(160,32,240,0.12);border:2px solid #A020F0;' : 'background:#111;border:1.5px solid '+(p.rec?'rgba(160,32,240,0.3)':'#222')+';';
+    html += '<div onclick="selecionarRPlano(&apos;'+p.key+'&apos;)" style="'+bg+'border-radius:12px;padding:1rem 0.75rem;cursor:pointer;position:relative;">';
+    if(p.rec) html += '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#C8FF00;color:#000;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:100px;white-space:nowrap;">⭐ Rec.</div>';
+    html += '<div style="font-size:0.65rem;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:0.4rem;font-family:Syne,sans-serif;">'+p.nome+'</div>';
+    html += '<div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:700;color:'+(isSel?'#A020F0':'#F5F2EE')+';">'+p.total+'</div>';
+    html += '<div style="font-size:0.65rem;color:#555;margin-bottom:0.5rem;">meses</div>';
+    html += '<div style="font-size:0.7rem;color:#A020F0;min-height:14px;font-weight:600;">'+p.ganho+'</div>';
+    html += '<div style="height:1px;background:#222;margin:0.5rem 0;"></div>';
+    html += '<div style="font-family:Syne,sans-serif;font-size:1rem;font-weight:700;color:'+(isSel?'#C8FF00':'#F5F2EE')+';">'+fmtR(mensal_ef)+'</div>';
+    html += '<div style="font-size:0.65rem;color:#555;">/mês efetivo</div>';
+    html += '</div>';
+    if(isSel){
+      var eco = (p.total - p.pagas) * mensal_base;
+      document.getElementById('rsp-tag').textContent = p.rec ? '⭐ Plano recomendado' : 'Plano selecionado';
+      document.getElementById('rsp-nome').textContent = p.nome;
+      document.getElementById('rsp-ganho').textContent = p.ganho;
+      document.getElementById('rsp-mensal').textContent = fmtR(mensal_ef);
+      document.getElementById('rsp-sub').textContent = fmtR(total_rs)+' no total · '+p.total+' meses';
+      document.getElementById('rsp-eco').textContent = eco>0 ? '💰 Economiza '+fmtR(eco) : '';
+    }
+  });
+  grid.innerHTML = html;
+}
+
+function selecionarRPlano(key){
+  _rastreioPlanoSel = key;
+  calcRSimulador();
+}
+
 // Ao fazer logout, limpar autenticação do financeiro
 var _origLogout = window.doLogout;
 window.doLogout = function(){
@@ -3832,7 +4381,7 @@ function _movePagesToSplit(leftTab, rightTab){
 // Devolve as pages de volta ao app original
 function _returnPagesFromSplit(){
   var app = document.getElementById('app');
-  ['page-eq','page-fin','page-vnd'].forEach(function(id){
+  ['page-eq','page-fin','page-vnd','page-crm'].forEach(function(id){
     var page = document.getElementById(id);
     if(page && page.parentElement && page.parentElement.id !== 'app'){
       page.classList.remove('active');
@@ -3976,13 +4525,29 @@ function startAutoRefresh(){
 }
 
 window.onload = function(){
-  // Limpar lista de ocultos — evita bug onde todos colaboradores ficam hidden
+  // Modo rastreio cliente: só ativa se ?r= tiver valor com pelo menos 8 chars
+  var params = new URLSearchParams(window.location.search);
+  var rcode = params.get('r');
+  if(rcode && rcode.length >= 8){
+    // Esconder dashboard e mostrar rastreio
+    var setup = document.getElementById('setup-screen');
+    if(setup) setup.style.display = 'none';
+    var app = document.getElementById('app');
+    if(app) app.style.display = 'none';
+    setTimeout(function(){ try{ initRastreio(); }catch(e){ console.error('rastreio error',e); } }, 200);
+    return;
+  }
+  // Modo normal dashboard
   localStorage.removeItem('eq_ocultos');
   try{ startAutoRefresh(); }catch(e){}
   try{ atualizarDescMeta(); }catch(e){}
   try{ updateComparativos(); }catch(e){}
   var tk = localStorage.getItem('cu_token');
   if(tk){ TOKEN=tk; TEAM_ID=localStorage.getItem('cu_team')||''; showApp(); syncAll(); }
+  else {
+    var inp = document.getElementById('token-input');
+    if(inp) inp.value = 'pk_194481479_XVXKU92ERH6OP845B17ZQS85DA7TD6HP';
+  }
 };
 
 
@@ -4089,6 +4654,66 @@ window.onload = function(){
     <div class="fin-auth-err" id="fin-auth-err">Senha incorreta. Tente novamente.</div>
     <button class="fin-auth-btn" onclick="verificarSenhaFin()">🔓 Entrar</button>
     <span class="fin-auth-cancel" onclick="fecharAuthFin()">Cancelar</span>
+  </div>
+</div>
+
+
+<!-- ════ OVERLAY RASTREIO CLIENTE ════ -->
+<div id="rastreio-overlay">
+  <div class="r-header">
+    <div class="r-logo">
+      <div class="r-logo-dot"></div>
+      <div class="r-logo-text">OnSystem · CRM</div>
+    </div>
+    <div class="r-client-name" id="rastreio-nome-cliente">Carregando...</div>
+    <div class="r-updated">Atualizado automaticamente</div>
+  </div>
+  <div class="r-tabs">
+    <button class="r-tab active" id="rtab-status" onclick="switchRastreioTab('status',this)">📍 Rastreio</button>
+    <button class="r-tab" id="rtab-simulador" onclick="switchRastreioTab('simulador',this)">💰 Simulador Kommo</button>
+  </div>
+  <div class="r-body" id="rastreio-body-status">
+    <div id="rastreio-content"><div class="rastreio-loading">Buscando status da sua implementação...</div></div>
+  </div>
+  <div class="r-body" id="rastreio-body-simulador" style="display:none;">
+    <div style="max-width:860px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:#F5F2EE;margin-bottom:0.4rem;">Simule seu plano Kommo</div>
+        <div style="font-size:0.8rem;color:#555;">Edite os campos e veja quanto vai investir</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;background:#111;border:1px solid #222;border-radius:14px;padding:1.2rem;margin-bottom:1.5rem;">
+        <div>
+          <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:0.5rem;font-family:'Syne',sans-serif;">Usuários</div>
+          <input type="number" id="rsim-usuarios" value="5" min="1" max="999" oninput="calcRSimulador()" style="width:100%;background:#0A0A0A;border:1px solid #333;border-radius:8px;color:#F5F2EE;font-size:1rem;font-weight:600;padding:0.6rem 0.7rem;outline:none;">
+        </div>
+        <div>
+          <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:0.5rem;font-family:'Syne',sans-serif;">Plano</div>
+          <select id="rsim-plano" oninput="calcRSimulador()" style="width:100%;background:#0A0A0A;border:1px solid #333;border-radius:8px;color:#F5F2EE;font-size:0.9rem;font-weight:600;padding:0.6rem 0.7rem;outline:none;cursor:pointer;">
+            <option value="15">Basic $15/user</option>
+            <option value="25" selected>Advanced $25/user</option>
+            <option value="45">Pro $45/user</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:0.5rem;font-family:'Syne',sans-serif;">Cotação USD (R$)</div>
+          <input type="number" id="rsim-cotacao" value="5.80" step="0.01" min="1" oninput="calcRSimulador()" style="width:100%;background:#0A0A0A;border:1px solid #333;border-radius:8px;color:#F5F2EE;font-size:1rem;font-weight:600;padding:0.6rem 0.7rem;outline:none;">
+        </div>
+      </div>
+      <div id="rsim-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.75rem;margin-bottom:1.5rem;"></div>
+      <div id="rsim-painel" style="background:linear-gradient(135deg,#140826,#0A0A0A);border:1.5px solid rgba(160,32,240,0.35);border-radius:14px;padding:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <div id="rsp-tag" style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:#A020F0;margin-bottom:0.4rem;font-family:'Syne',sans-serif;">Plano selecionado</div>
+          <div id="rsp-nome" style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:#F5F2EE;margin-bottom:0.3rem;">1 ano</div>
+          <div id="rsp-ganho" style="font-size:0.78rem;color:#A020F0;font-weight:600;">paga apenas 10</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:0.2rem;font-family:'Syne',sans-serif;">por mês efetivo</div>
+          <div id="rsp-mensal" style="font-family:'Syne',sans-serif;font-size:2.2rem;color:#C8FF00;line-height:1;">R$521</div>
+          <div id="rsp-sub" style="font-size:0.72rem;color:#555;margin-top:0.2rem;">R$6.250 no total</div>
+          <div id="rsp-eco" style="background:rgba(200,255,0,0.1);color:#C8FF00;font-size:0.75rem;font-weight:700;padding:0.35rem 0.8rem;border-radius:100px;display:inline-block;margin-top:0.5rem;">Economiza</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
