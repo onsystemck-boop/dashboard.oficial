@@ -342,7 +342,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 /* Hero status card */
 .r-hero{background:linear-gradient(135deg,rgba(160,32,240,0.12),rgba(10,10,20,0.8));border:1px solid rgba(160,32,240,0.3);border-radius:20px;padding:1.8rem 2rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden;}
 .r-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(160,32,240,0.15),transparent 70%);pointer-events:none;}
-.r-hero-icon{width:60px;height:60px;border-radius:16px;background:rgba(160,32,240,0.2);border:1.5px solid rgba(160,32,240,0.4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;}
+.r-hero-icon{width:48px;height:48px;border-radius:12px;background:rgba(160,32,240,0.2);border:1.5px solid rgba(160,32,240,0.4);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
 .r-hero-content{flex:1;min-width:0;}
 .r-hero-label{font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#A020F0;margin-bottom:0.35rem;}
 .r-hero-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:0.35rem;line-height:1.2;}
@@ -4165,10 +4165,10 @@ function renderRastreioStatic(dados, statusKey){
   html += '<div class="r-hero-icon">'+stepAtual.icon+'</div>';
   html += '<div class="r-hero-content">';
   html += '<div class="r-hero-label">Status atual</div>';
-  html += '<div class="r-hero-title">'+stepAtual.label+'</div>';
+  html += '<div class="r-hero-title" style="font-size:1.4rem;line-height:1.2;">'+stepAtual.label+'</div>';
+  html += '<div style="margin:0.4rem 0;"><span class="r-hero-badge">'+progresso+'% concluído</span></div>';
   html += '<div class="r-hero-desc">'+stepAtual.desc+'</div>';
   html += '</div>';
-  html += '<div class="r-hero-badge">'+progresso+'% concluído</div>';
   html += '</div>';
 
   // Barra de progresso
@@ -4181,16 +4181,16 @@ function renderRastreioStatic(dados, statusKey){
   RASTREIO_STEPS.forEach(function(step, i){
     var cls = i < stepIdx ? 'done' : (i === stepIdx ? 'active' : 'pending');
     var isLast = i === RASTREIO_STEPS.length - 1;
-    var dotIcon = cls==='done' ? '✓' : (cls==='active' ? step.icon : '');
+    var dotIcon = cls==='done' ? '✓' : (cls==='active' ? '●' : '');
     var dataStep = datas[i];
     var isFer = !isDiaUtil(dataStep) && cls !== 'done';
     var dataLabel = '';
     if(cls==='done') dataLabel='<span class="r-step-date done">✓ Concluído</span>';
-    else if(cls==='active') dataLabel='<span class="r-step-date active">⚡ Em andamento · prev. '+fmtDataShort(cursor)+'</span>';
+    else if(cls==='active') dataLabel='<span class="r-step-date active">Em andamento · prev. '+fmtDataShort(cursor)+'</span>';
     else {
       var dStr = fmtDataShort(dataStep);
-      if(isFer) dataLabel='<span class="r-step-date feriado">⚠ '+dStr+' (feriado/fim de semana, ajustado)</span>';
-      else dataLabel='<span class="r-step-date pending">📅 Prev. '+dStr+'</span>';
+      if(isFer) dataLabel='<span class="r-step-date feriado">'+dStr+' (feriado/fim de semana, ajustado)</span>';
+      else dataLabel='<span class="r-step-date pending">Prev. '+dStr+'</span>';
     }
 
     html += '<div class="r-step">';
