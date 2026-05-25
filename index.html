@@ -3975,12 +3975,11 @@ function renderCRMKanban(){
 }
 
 function gerarLink(taskId, taskNome){
-  var codigo = taskId + '_' + Math.random().toString(36).substr(2,6);
-  // Usar URL pública hospedada no GitHub Pages
+  // Embutir taskId e nome codificado na própria URL — sem depender de localStorage do cliente
   var baseUrl = 'https://onsystemck-boop.github.io/dashboard.oficial/';
-  var link = baseUrl + '?r=' + codigo;
+  var payload = btoa(unescape(encodeURIComponent(JSON.stringify({taskId:taskId, nome:taskNome}))));
+  var link = baseUrl + '?r=' + payload;
   localStorage.setItem('crm_link_'+taskId, link);
-  localStorage.setItem('crm_rcode_'+codigo, JSON.stringify({taskId:taskId, nome:taskNome}));
   renderCRMKanban();
   setTimeout(function(){ copiarLink(link, 'lnk_'+taskId); }, 100);
 }
@@ -4016,7 +4015,28 @@ function switchRastreioTab(tab, btn){
   if(btn) btn.classList.add('active');
   document.getElementById('rastreio-body-status').style.display = tab==='status' ? 'block' : 'none';
   document.getElementById('rastreio-body-simulador').style.display = tab==='simulador' ? 'block' : 'none';
-  if(tab==='simulador') calcRSimulador();
+  if(tab==='simulador'){ calcRSimulador(); fetchCotacaoDolar(); }
+}
+
+async function fetchCotacaoDolar(){
+  var badge = document.getElementById('rsim-cotacao-badge');
+  var input = document.getElementById('rsim-cotacao');
+  if(badge) badge.innerHTML = '⏳ buscando...';
+  try {
+    var res = await fetch('https://open.er-api.com/v6/latest/USD');
+    if(!res.ok) throw new Error('erro');
+    var data = await res.json();
+    var brl = data.rates && data.rates.BRL;
+    if(brl){
+      var cotStr = brl.toFixed(2);
+      if(input){ input.value = cotStr; calcRSimulador(); }
+      if(badge) badge.innerHTML = '🟢 ao vivo · R$ ' + cotStr.replace('.',',');
+    } else {
+      if(badge) badge.innerHTML = '⚪ manual';
+    }
+  } catch(e){
+    if(badge) badge.innerHTML = '⚪ manual';
+  }
 }
 
 async function initRastreio(){
@@ -4027,25 +4047,32 @@ async function initRastreio(){
   // Mostrar overlay imediatamente
   var overlay = document.getElementById('rastreio-overlay');
   overlay.classList.add('active');
+  // Buscar cotação do dólar em background
+  try{ fetchCotacaoDolar(); }catch(e){}
 
-  // Buscar dados do código
-  var dadosStr = localStorage.getItem('crm_rcode_'+rcode);
-  if(!dadosStr){
+  // Tentar decodificar payload embutido na URL (novo formato: base64 JSON)
+  var dados = null;
+  try {
+    var decoded = JSON.parse(decodeURIComponent(escape(atob(rcode))));
+    if(decoded && decoded.taskId) dados = decoded;
+  } catch(e1) {
+    // Fallback: tentar localStorage (links gerados no formato antigo)
+    var dadosStr = localStorage.getItem('crm_rcode_'+rcode);
+    if(dadosStr){ try{ dados = JSON.parse(dadosStr); }catch(e2){} }
+  }
+
+  if(!dados || !dados.taskId){
     document.getElementById('rastreio-nome-cliente').textContent = 'Implementação não encontrada';
     document.getElementById('rastreio-content').innerHTML = '<div class="rastreio-error">Link inválido ou expirado.</div>';
     return;
   }
 
-  var dados = JSON.parse(dadosStr);
   document.getElementById('rastreio-nome-cliente').textContent = dados.nome || 'Seu CRM';
 
-  // Buscar status no ClickUp via API pública não é possível sem token
-  // Usamos o token salvo no localStorage (do dashboard interno)
-  var token = localStorage.getItem('cu_token');
-  if(!token){
-    renderRastreioStatic(dados, 'em_construcao');
-    return;
-  }
+  // Token fixo embutido — usado apenas para leitura do status da task do cliente
+  // (apenas lê status público da task, não expõe dados internos)
+  var TOKEN_READONLY = 'pk_194481479_XVXKU92ERH6OP845B17ZQS85DA7TD6HP';
+  var token = localStorage.getItem('cu_token') || TOKEN_READONLY;
 
   document.getElementById('rastreio-content').innerHTML = '<div class="rastreio-loading">Buscando status...</div>';
 
@@ -4695,7 +4722,10 @@ window.onload = function(){
           </select>
         </div>
         <div>
-          <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:0.5rem;font-family:'Syne',sans-serif;">Cotação USD (R$)</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#555;font-family:'Syne',sans-serif;">Cotação USD (R$)</div>
+            <div id="rsim-cotacao-badge" style="font-size:0.62rem;font-weight:700;color:#555;display:flex;align-items:center;gap:0.25rem;">⏳ buscando...</div>
+          </div>
           <input type="number" id="rsim-cotacao" value="5.80" step="0.01" min="1" oninput="calcRSimulador()" style="width:100%;background:#0A0A0A;border:1px solid #333;border-radius:8px;color:#F5F2EE;font-size:1rem;font-weight:600;padding:0.6rem 0.7rem;outline:none;">
         </div>
       </div>
