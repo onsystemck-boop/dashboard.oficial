@@ -798,11 +798,11 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <div class="kpi-sub" id="vk-hot-s">CRM pipeline</div>
       <div class="kpi-bar"><div class="kpi-bar-fill" style="width:40%;background:var(--yellow)"></div></div>
     </div>
-    <div class="kpi-card k-re">
-      <div class="kpi-label">Performance</div>
-      <div class="kpi-value" id="vk-perf" style="color:var(--red)">4</div>
-      <div class="kpi-sub">em acompanhamento</div>
-      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:40%;background:var(--red)"></div></div>
+    <div class="kpi-card k-gr">
+      <div class="kpi-label" id="vk-fat-mes-label">Faturamento do Mês</div>
+      <div class="kpi-value" id="vk-fat-mes" style="color:var(--green)">—</div>
+      <div class="kpi-sub" id="vk-fat-mes-sub">MRR + CRM + Avulsos</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="vk-fat-mes-bar" style="width:0%;background:var(--green)"></div></div>
     </div>
   </div>
 
@@ -901,7 +901,7 @@ tr:hover td{background:rgba(255,255,255,0.02);}
         <div class="sr"><div class="sd" style="background:#7c3aed"></div><div class="si"><div class="sl">CRM & Implementações</div><div class="sc">em fechamento</div><div class="sb"><div class="sbf" style="width:10%;background:#7c3aed"></div></div></div><div style="text-align:right"><div class="sv" style="color:#7c3aed" id="rt-crm-val">—</div><div class="sp">impl. total</div></div></div>
         <div class="sr"><div class="sd" style="background:var(--green)"></div><div class="si"><div class="sl">Mensalidade Sistemas</div><div class="sc" id="rt-men-sc">recorrência digital</div><div class="sb"><div class="sbf" id="rt-men-bar" style="width:0%;background:var(--green)"></div></div></div><div style="text-align:right"><div class="sv" style="color:var(--green)" id="rt-men-val">—</div><div class="sp" id="rt-men-pct">—</div></div></div>
         <div class="sr"><div class="sd" style="background:var(--yellow)"></div><div class="si"><div class="sl">Avulsos / Captações</div><div class="sc">serviços pontuais</div><div class="sb"><div class="sbf" style="width:4%;background:var(--yellow)"></div></div></div><div style="text-align:right"><div class="sv" style="color:var(--yellow)" id="rt-av-val">—</div><div class="sp">avulso</div></div></div>
-        <div class="sb2"><div><div class="sbl">Total MRR</div><div class="sbv" style="color:var(--accent)" id="rt-mrr-total">—</div></div><div style="text-align:right"><div class="sbl">ARR</div><div class="sbv" style="color:var(--blue)" id="rt-arr-total">—</div></div></div>
+        <div class="sb2"><div><div class="sbl">Total MRR</div><div class="sbv" style="color:var(--accent)" id="rt-mrr-total">—</div></div><div style="text-align:center"><div class="sbl">Faturamento Total</div><div class="sbv" style="color:var(--green);font-size:1rem;" id="rt-fat-total">—</div></div><div style="text-align:right"><div class="sbl">ARR</div><div class="sbv" style="color:var(--blue)" id="rt-arr-total">—</div></div></div>
       </div>
     </div>
   </div>
@@ -1813,9 +1813,11 @@ function calcVendasKPIs(tasks){
   ss('vk-mrr',    fmtMoneyK(mrrTotal));
   ss('vk-arr',    fmtMoneyK(arrTotal));
   ss('vk-ativos', ganhoTotal.length.toString());
+  // Impl. CRM: total geral agora, atualizado por mês depois do filtro
   ss('vk-hot',    fmtMoneyK(crmValAll));
   ss('vk-hot-s',  crmTasksAll.length+' impl. CRM');
-  ss('vk-perf',   perfAll.length.toString());
+
+  // Faturamento do mês: calculado após filtro de mês — atualizado abaixo
 
   // ── FILTRO POR MÊS ────────────────────────────────────────────────────
   var tasksDoMes = tasks;
@@ -1833,15 +1835,10 @@ function calcVendasKPIs(tasks){
   var crmMesVal = crmMes.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
   var avulsoMesVal = avulsoMes.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
 
-  // Receita total do mês = MRR do mês + CRM fechado no mês + Avulsos do mês
-  var receitaMes = mrrMes + crmMesVal + avulsoMesVal;
-
   // Mensalidade sistemas = coluna MENSALIDADE CRM & SISTEMAS
   var mensalidadeTasks = tasks.filter(function(t){
     return normStatus(t.status&&t.status.status)==='MENSALIDADE CRM & SISTEMAS';
   });
-  // Mensalidade ao vivo: soma campo 'valor' das tasks em MENSALIDADE CRM & SISTEMAS
-  // Se etapa vazia no ClickUp → exibe 0 (não usa fallback hardcoded)
   var menVal = mensalidadeTasks.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
 
   var nomeMes = {'todos':'Ano Todo','01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'}[crmMesSel]||crmMesSel;
@@ -1849,6 +1846,76 @@ function calcVendasKPIs(tasks){
   // ── BLOCO METAS ──────────────────────────────────────────────────────────
   var _metaAno = getAnoAtivo ? getAnoAtivo() : String(new Date().getFullYear());
   var _isAnoTodo = crmMesSel === 'todos';
+
+  // ── FATURAMENTO (calculado aqui, depois de _isAnoTodo estar declarado) ──
+  var avulsoValAll = avulsoAll.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
+  var fatMes, fatLabel, mrrDoMes;
+
+  if(_isAnoTodo){
+    // Ano Todo: MRR×12 + todo CRM + todos avulsos + mensalidade×12
+    fatMes   = (mrrTotal * 12) + crmValAll + avulsoValAll + (menVal * 12);
+    fatLabel = 'Faturamento do Ano';
+    mrrDoMes = mrrTotal;
+  } else {
+    // Mês específico: MRR só dos contratos fechados ATÉ esse mês (acumulado)
+    // Ex: contrato fechado em Junho não conta em Maio
+    var mesNum = parseInt(crmMesSel, 10); // 1=Jan ... 12=Dez
+
+    // Contratos ativos no mês: GANHO fechados até esse mês
+    var ganhoAteOMes = ganhoTotal.filter(function(t){
+      var tm = getTaskMes(t);
+      if(!tm) return true; // sem campo mês: contrato antigo, sempre conta
+      return parseInt(tm, 10) <= mesNum;
+    });
+
+    // Contratos PERDIDO que estavam ativos nesse mês:
+    // entrou (Mês Entrada) <= mesNum E saiu (Mês Saída) > mesNum
+    var perdidoTasks = tasks.filter(function(t){
+      return normStatus(t.status&&t.status.status)==='PERDIDO';
+    });
+    var perdidoAtivoNoMes = perdidoTasks.filter(function(t){
+      var entrada = getTaskMes(t);
+      var saida   = getMesSaida(t);
+      var entNum  = entrada ? parseInt(entrada, 10) : 1; // sem entrada: assume início
+      var saiNum  = saida   ? parseInt(saida, 10)   : 0; // sem saída: não conta
+      return saiNum > 0 && entNum <= mesNum && saiNum > mesNum;
+    });
+
+    var mrrGanho   = ganhoAteOMes.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
+    var mrrPerdido = perdidoAtivoNoMes.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
+    mrrDoMes = mrrGanho + mrrPerdido;
+    fatMes   = mrrDoMes + crmMesVal + avulsoMesVal + menVal;
+    fatLabel = 'Faturamento do Mês';
+  }
+
+  ss('vk-fat-mes-label', fatLabel);
+  ss('vk-fat-mes', fatMes > 0 ? fmtMoneyK(fatMes) : '—');
+  var fatSubParts = [];
+  if(_isAnoTodo){
+    fatSubParts.push('MRR×12 '+fmtMoneyK(mrrTotal*12));
+    if(menVal > 0)       fatSubParts.push('Sist.×12 '+fmtMoneyK(menVal*12));
+    if(crmValAll > 0)    fatSubParts.push('CRM '+fmtMoneyK(crmValAll));
+    if(avulsoValAll > 0) fatSubParts.push('Avulso '+fmtMoneyK(avulsoValAll));
+  } else {
+    fatSubParts.push('MRR '+fmtMoneyK(mrrDoMes));
+    if(menVal > 0)       fatSubParts.push('Sist. '+fmtMoneyK(menVal));
+    if(crmMesVal > 0)    fatSubParts.push('CRM '+fmtMoneyK(crmMesVal));
+    if(avulsoMesVal > 0) fatSubParts.push('Avulso '+fmtMoneyK(avulsoMesVal));
+  }
+  ss('vk-fat-mes-sub', fatSubParts.join(' · '));
+  var fatRef = _isAnoTodo ? arrTotal+(menVal*12) : mrrTotal+menVal;
+  var fatBarPct = fatRef > 0 ? Math.min(Math.round(fatMes/fatRef*100),100) : 0;
+  var fatBar = document.getElementById('vk-fat-mes-bar');
+  if(fatBar){ fatBar.style.width = fatBarPct+'%'; }
+
+  // KPI Impl. CRM — valor do mês quando mês selecionado, total quando Ano Todo
+  if(_isAnoTodo){
+    ss('vk-hot',   fmtMoneyK(crmValAll));
+    ss('vk-hot-s', crmTasksAll.length+' impl. CRM total');
+  } else {
+    ss('vk-hot',   crmMesVal > 0 ? fmtMoneyK(crmMesVal) : '—');
+    ss('vk-hot-s', crmMes.length > 0 ? crmMes.length+' impl. em '+nomeMes : 'sem impl. em '+nomeMes);
+  }
 
   // Metas a usar: anual se "Ano Todo", mensal se mês específico
   var _metaMes2d = _isAnoTodo ? String(new Date().getMonth()+1).padStart(2,'0') : crmMesSel;
@@ -1924,26 +1991,40 @@ function calcVendasKPIs(tasks){
   ss('v-men-val', menVal > 0 ? fmtMoneyK(menVal) : '—');
   ss('vk-mrr2',      fmtMoneyK(mrrTotal));
   ss('vk-arr2',      fmtMoneyK(arrTotal));
-  ss('rt-arr-total', fmtMoneyK(arrTotal));
-  ss('rt-mrr-total', fmtMoneyK(mrrTotal));
 
   // Atualizar displays das metas (labels estáticos)
   atualizarDisplayMetas();
 
-  // ── RECEITA POR TIPO (painel lateral) — sempre total geral ────────────
-  ss('rt-mkt-val', mrrTotal > 0 ? fmtMoneyK(mrrTotal) : '—');
-  ss('rt-crm-val', crmValAll > 0 ? fmtMoneyK(crmValAll) : '—');
-  // Avulsos total = todos os avulsos
-  var avulsoValAll = avulsoAll.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
-  ss('rt-av-val', avulsoValAll > 0 ? fmtMoneyK(avulsoValAll) : '—');
-  // Mensalidade Sistemas — ao vivo da etapa MENSALIDADE CRM & SISTEMAS
-  ss('rt-men-val', menVal > 0 ? fmtMoneyK(menVal) : '—');
-  var totalReceita = mrrTotal + crmValAll + avulsoValAll + menVal;
-  var menPct = totalReceita > 0 ? Math.round(menVal / totalReceita * 100) : 0;
-  ss('rt-men-pct', menVal > 0 ? menPct + '%' : '—');
+  // ── RECEITA POR TIPO (painel lateral) — responde ao mês selecionado ────
+  var rtMkt, rtCrm, rtAv, rtMen, rtTotal;
+  if(_isAnoTodo){
+    // Ano Todo: tudo acumulado
+    rtMkt   = mrrTotal;
+    rtCrm   = crmValAll;
+    rtAv    = avulsoValAll;
+    rtMen   = menVal;
+  } else {
+    // Mês específico: MRR total (recorrente) + valores do mês
+    rtMkt   = mrrTotal;
+    rtCrm   = crmMesVal;
+    rtAv    = avulsoMesVal;
+    rtMen   = menVal;
+  }
+  rtTotal = rtMkt + rtCrm + rtAv + rtMen;
+
+  ss('rt-mkt-val', rtMkt > 0 ? fmtMoneyK(rtMkt) : '—');
+  ss('rt-crm-val', rtCrm > 0 ? fmtMoneyK(rtCrm) : '—');
+  ss('rt-av-val',  rtAv  > 0 ? fmtMoneyK(rtAv)  : '—');
+  ss('rt-men-val', rtMen > 0 ? fmtMoneyK(rtMen) : '—');
+  var menPct = rtTotal > 0 ? Math.round(rtMen / rtTotal * 100) : 0;
+  ss('rt-men-pct', rtMen > 0 ? menPct + '%' : '—');
   ss('rt-men-sc', menVal > 0 ? mensalidadeTasks.length + ' sistema' + (mensalidadeTasks.length !== 1 ? 's' : '') : 'nenhuma task na etapa');
   var menBar = document.getElementById('rt-men-bar');
   if(menBar) menBar.style.width = menPct + '%';
+  // Rodapé: Total MRR / Faturamento Total / ARR — reflete o período
+  ss('rt-mrr-total', fmtMoneyK(rtMkt));
+  ss('rt-fat-total', rtTotal > 0 ? fmtMoneyK(rtTotal) : '—');
+  ss('rt-arr-total', fmtMoneyK(_isAnoTodo ? arrTotal : mrrTotal * 12));
 
   // ── RESUMO ANUAL ──────────────────────────────────────────────────────
   ss('ano-mrr',        fmtMoneyK(mrrTotal));
@@ -2260,6 +2341,31 @@ function getTaskMes(task) {
   if (task.due_date) {
     var d = new Date(parseInt(task.due_date));
     return String(d.getMonth() + 1).padStart(2, '0');
+  }
+  return null;
+}
+
+// Retorna o mês de saída (churn) de uma task — campo "Mês Saída" ou "mes saida" etc.
+function getMesSaida(task) {
+  var MMAP = {'Janeiro':'01','Fevereiro':'02','Marco':'03','Março':'03','Abril':'04','Maio':'05','Junho':'06','Julho':'07','Agosto':'08','Setembro':'09','Outubro':'10','Novembro':'11','Dezembro':'12'};
+  var cfs = task.custom_fields || [];
+  for (var i = 0; i < cfs.length; i++) {
+    var f = cfs[i];
+    if (!f.name) continue;
+    var fn = f.name.toLowerCase().replace(/\s+/g,'');
+    if (fn === 'messaida' || fn === 'mêssaída' || fn === 'messaída' || fn === 'saida' || fn === 'saída' || fn.indexOf('saida') >= 0 || fn.indexOf('saída') >= 0) {
+      if (f.value) {
+        if (MMAP[f.value]) return MMAP[f.value];
+        if (f.type_config && f.type_config.options) {
+          var ids = Array.isArray(f.value) ? f.value : [f.value];
+          for (var j = 0; j < ids.length; j++) {
+            var opt = f.type_config.options.find(function(o){ return o.id === ids[j]; });
+            if (opt && MMAP[opt.label]) return MMAP[opt.label];
+            if (opt && opt.name && MMAP[opt.name]) return MMAP[opt.name];
+          }
+        }
+      }
+    }
   }
   return null;
 }
@@ -4394,11 +4500,30 @@ function _movePagesToSplit(leftTab, rightTab){
     leftInner.appendChild(pageLeft);
   }
   // Mover page do painel direito
-  var pageRight = document.getElementById('page-' + rightTab);
-  if(pageRight){
-    pageRight.classList.add('active');
-    pageRight.style.padding = '1rem 1.2rem';
-    rightInner.appendChild(pageRight);
+  // Se mesma aba dos dois lados, clonar para o direito
+  if(leftTab === rightTab){
+    var pageRight = document.getElementById('page-' + rightTab);
+    if(pageRight){
+      var clone = pageRight.cloneNode(true);
+      clone.id = 'page-' + rightTab + '-clone';
+      clone.classList.add('active');
+      clone.style.padding = '1rem 1.2rem';
+      // Remover canvases do clone (não funcionam clonados) e substituir por placeholder
+      clone.querySelectorAll('canvas').forEach(function(c){
+        var ph = document.createElement('div');
+        ph.style.cssText = 'display:flex;align-items:center;justify-content:center;height:'+c.offsetHeight+'px;opacity:0.3;font-size:0.75rem;color:var(--muted);';
+        ph.textContent = '📊 gráfico no painel esquerdo';
+        c.parentNode.replaceChild(ph, c);
+      });
+      rightInner.appendChild(clone);
+    }
+  } else {
+    var pageRight = document.getElementById('page-' + rightTab);
+    if(pageRight){
+      pageRight.classList.add('active');
+      pageRight.style.padding = '1rem 1.2rem';
+      rightInner.appendChild(pageRight);
+    }
   }
 
   // Atualizar selects
@@ -4424,6 +4549,11 @@ function _movePagesToSplit(leftTab, rightTab){
 // Devolve as pages de volta ao app original
 function _returnPagesFromSplit(){
   var app = document.getElementById('app');
+  // Remover clone se existir
+  ['page-eq-clone','page-fin-clone','page-vnd-clone','page-crm-clone'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.parentNode.removeChild(el);
+  });
   ['page-eq','page-fin','page-vnd','page-crm'].forEach(function(id){
     var page = document.getElementById(id);
     if(page && page.parentElement && page.parentElement.id !== 'app'){
@@ -4443,21 +4573,10 @@ function renderSplitPanel(side, tab){
     return;
   }
 
-  var oldTab = side === 'left' ? _splitLeft : _splitRight;
   if(side === 'left')  _splitLeft  = tab;
   else                 _splitRight = tab;
 
-  // Se a page nova já está no outro painel, trocar
-  var otherTab = side === 'left' ? _splitRight : _splitLeft;
-  if(otherTab === tab){
-    // Trocar: o outro painel recebe a page que estava neste
-    if(side === 'left')  _splitRight = oldTab;
-    else                 _splitLeft  = oldTab;
-    var otherSel = document.getElementById('split-sel-' + (side === 'left' ? 'right' : 'left'));
-    if(otherSel) otherSel.value = oldTab;
-  }
-
-  // Devolver pages ao app e redistribuir
+  // Permite mesma aba nos dois lados — _movePagesToSplit trata clone
   _returnPagesFromSplit();
   _movePagesToSplit(_splitLeft, _splitRight);
 }
