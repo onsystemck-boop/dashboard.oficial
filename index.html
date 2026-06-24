@@ -1851,9 +1851,39 @@ function calcVendasKPIs(tasks){
   var avulsoValAll = avulsoAll.reduce(function(s,t){ return s + cfMoney(t,'valor'); }, 0);
   var fatMes, fatLabel, mrrDoMes;
 
+  var mesAtual = new Date().getMonth() + 1; // 1=Jan ... 12=Dez
+  var mrrPuroAcum = 0;
+  var menAcum = 0;
   if(_isAnoTodo){
-    // Ano Todo: MRR×12 + todo CRM + todos avulsos + mensalidade×12
-    fatMes   = (mrrTotal * 12) + crmValAll + avulsoValAll + (menVal * 12);
+    var perdidoTasksAno = tasks.filter(function(t){
+      return normStatus(t.status&&t.status.status)==='PERDIDO';
+    });
+    for(var m = 1; m <= mesAtual; m++){
+      // GANHO fechados até esse mês
+      var ganhoM = ganhoTotal.filter(function(t){
+        var tm = getTaskMes(t);
+        if(!tm) return true;
+        return parseInt(tm,10) <= m;
+      });
+      // PERDIDO que estavam ativos nesse mês
+      var perdidoM = perdidoTasksAno.filter(function(t){
+        var entrada = getTaskMes(t);
+        var saida   = getMesSaida(t);
+        var entNum  = entrada ? parseInt(entrada,10) : 1;
+        var saiNum  = saida   ? parseInt(saida,10)   : 0;
+        return saiNum > 0 && entNum <= m && saiNum > m;
+      });
+      mrrPuroAcum += ganhoM.reduce(function(s,t){ return s+cfMoney(t,'valor'); },0);
+      mrrPuroAcum += perdidoM.reduce(function(s,t){ return s+cfMoney(t,'valor'); },0);
+      // Mensalidade: só a partir do mês de entrada de cada sistema
+      mensalidadeTasks.forEach(function(t){
+        var tm = getTaskMes(t);
+        var entNum = tm ? parseInt(tm,10) : 1;
+        if(entNum <= m) menAcum += cfMoney(t,'valor');
+      });
+    }
+    var mrrAcumulado = mrrPuroAcum + menAcum;
+    fatMes   = mrrAcumulado + crmValAll + avulsoValAll;
     fatLabel = 'Faturamento do Ano';
     mrrDoMes = mrrTotal;
   } else {
@@ -1892,8 +1922,9 @@ function calcVendasKPIs(tasks){
   ss('vk-fat-mes', fatMes > 0 ? fmtMoneyK(fatMes) : '—');
   var fatSubParts = [];
   if(_isAnoTodo){
-    fatSubParts.push('MRR×12 '+fmtMoneyK(mrrTotal*12));
-    if(menVal > 0)       fatSubParts.push('Sist.×12 '+fmtMoneyK(menVal*12));
+    fatSubParts.push('MRR acum. '+fmtMoneyK(mrrPuroAcum));
+    if(menAcum > 0)      fatSubParts.push('Sist. '+fmtMoneyK(menAcum));
+    if(crmValAll > 0)    fatSubParts.push('CRM '+fmtMoneyK(crmValAll));
     if(crmValAll > 0)    fatSubParts.push('CRM '+fmtMoneyK(crmValAll));
     if(avulsoValAll > 0) fatSubParts.push('Avulso '+fmtMoneyK(avulsoValAll));
   } else {
@@ -1987,8 +2018,21 @@ function calcVendasKPIs(tasks){
   ss('mkt-meta-bar-meta', 'Meta: '+mktMetaContr+' contratos');
   ss('mkt-meta-val-disp', 'R$'+(mktMetaValor/1000).toFixed(0)+'k');
 
-  // Mensalidade e totais
-  ss('v-men-val', menVal > 0 ? fmtMoneyK(menVal) : '—');
+  // Mensalidade e totais — sensível ao período
+  // Ano Todo: acumulado real (menAcum calculado no loop)
+  // Mês específico: só sistemas que já entraram até esse mês
+  var menExibir;
+  if(_isAnoTodo){
+    menExibir = menAcum;
+  } else {
+    var mesNumMen = parseInt(crmMesSel, 10);
+    menExibir = mensalidadeTasks.reduce(function(s,t){
+      var tm = getTaskMes(t);
+      var entNum = tm ? parseInt(tm,10) : 1;
+      return entNum <= mesNumMen ? s + cfMoney(t,'valor') : s;
+    }, 0);
+  }
+  ss('v-men-val', menExibir > 0 ? fmtMoneyK(menExibir) : '—');
   ss('vk-mrr2',      fmtMoneyK(mrrTotal));
   ss('vk-arr2',      fmtMoneyK(arrTotal));
 
@@ -1996,19 +2040,25 @@ function calcVendasKPIs(tasks){
   atualizarDisplayMetas();
 
   // ── RECEITA POR TIPO (painel lateral) — responde ao mês selecionado ────
-  var rtMkt, rtCrm, rtAv, rtMen, rtTotal;
+  var rtMkt, rtCrm, rtAv, rtMen, rtMenAcum, rtTotal;
   if(_isAnoTodo){
-    // Ano Todo: tudo acumulado
-    rtMkt   = mrrTotal;
+    // Ano Todo: usa valores separados já calculados no loop acima
+    rtMkt   = mrrPuroAcum;  // MRR puro acumulado (sem mensalidade)
     rtCrm   = crmValAll;
     rtAv    = avulsoValAll;
-    rtMen   = menVal;
+    rtMen   = menAcum;      // mensalidade acumulada corretamente
   } else {
-    // Mês específico: MRR total (recorrente) + valores do mês
-    rtMkt   = mrrTotal;
+    // Mês específico
+    var mesNumRt = parseInt(crmMesSel, 10);
+    // Mensalidade: só sistemas que já entraram até esse mês
+    rtMen = mensalidadeTasks.reduce(function(s,t){
+      var tm = getTaskMes(t);
+      var entNum = tm ? parseInt(tm,10) : 1;
+      return entNum <= mesNumRt ? s + cfMoney(t,'valor') : s;
+    }, 0);
+    rtMkt   = mrrDoMes - rtMen; // MRR puro sem mensalidade
     rtCrm   = crmMesVal;
     rtAv    = avulsoMesVal;
-    rtMen   = menVal;
   }
   rtTotal = rtMkt + rtCrm + rtAv + rtMen;
 
@@ -3394,10 +3444,65 @@ function doLogout(){localStorage.removeItem('cu_token');localStorage.removeItem(
 
 
 // ── METAS POR MÊS (CRM + Marketing) ──────────────────────────────────────────
+// ── GIST SYNC — metas sincronizadas entre dispositivos ──────────────────
+var _GIST_ID    = '91b1f299f00792f09a21d74e2a6f2e33';
+var _GIST_TOKEN = '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';
+var _GIST_FILE  = 'onsystem-metas.json';
+var _gistSaving = false;
+
 function getMetas(){
   try{ return JSON.parse(localStorage.getItem('os_metas_v2')||'{}'); }catch(e){ return {}; }
 }
-function saveMetas(obj){ localStorage.setItem('os_metas_v2', JSON.stringify(obj)); }
+
+function saveMetas(obj){
+  localStorage.setItem('os_metas_v2', JSON.stringify(obj));
+  _syncGistSave(obj);
+}
+
+function _syncGistSave(obj){
+  if(_gistSaving) return;
+  _gistSaving = true;
+  fetch('https://api.github.com/gists/'+_GIST_ID, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': 'token '+_GIST_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ files: { [_GIST_FILE]: { content: JSON.stringify(obj) } } })
+  })
+  .then(function(r){ _gistSaving = false; })
+  .catch(function(e){ _gistSaving = false; console.warn('Gist sync erro:', e); });
+}
+
+function _syncGistLoad(){
+  fetch('https://api.github.com/gists/'+_GIST_ID, {
+    headers: { 'Authorization': 'token '+_GIST_TOKEN }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var content = data && data.files && data.files[_GIST_FILE] && data.files[_GIST_FILE].content;
+    if(!content) return;
+    try{
+      var remote = JSON.parse(content);
+      if(Object.keys(remote).length === 0) return; // gist vazio, não sobrescreve
+      localStorage.setItem('os_metas_v2', JSON.stringify(remote));
+      // também sincroniza metas_anuais se existir no gist
+      if(remote.__anuais){
+        localStorage.setItem('metas_anuais', JSON.stringify(remote.__anuais));
+        delete remote.__anuais;
+      }
+      console.log('✅ Metas sincronizadas do Gist');
+    }catch(e){ console.warn('Gist parse erro:', e); }
+  })
+  .catch(function(e){ console.warn('Gist load erro:', e); });
+}
+
+// Carrega do Gist ao iniciar
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', _syncGistLoad);
+} else {
+  setTimeout(_syncGistLoad, 500);
+}
 
 function getMetaMes(mes2d, ano){
   var k = (ano||'2026')+'_'+mes2d;
@@ -3429,6 +3534,10 @@ function saveMetaAno(ano, obj){
   var all = JSON.parse(localStorage.getItem('metas_anuais')||'{}');
   all[ano] = obj;
   localStorage.setItem('metas_anuais', JSON.stringify(all));
+  // Sincronizar metas anuais junto com as metas mensais no Gist
+  var metasMensais = getMetas();
+  metasMensais.__anuais = all;
+  _syncGistSave(metasMensais);
 }
 
 function abrirModalMetas(){
