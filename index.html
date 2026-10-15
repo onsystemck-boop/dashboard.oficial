@@ -632,6 +632,7 @@ body.embed-mode .topbar-title{display:block!important;font-size:0.8rem;}
 body.embed-mode .page{padding:0.9rem 1rem;}
 body.embed-compact{zoom:0.8;height:125vh;}
 .pf-meta-r{flex-wrap:wrap;row-gap:0.35rem;}
+.pf-nuvem{font-size:0.6rem;color:var(--muted);margin-left:0.4rem;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -5362,9 +5363,11 @@ var CloudSync = (function(){
       }
       return;
     }
+    // Chaves que existem aqui mas nunca foram pra nuvem (ex.: dados que mudaram de arquivo entre versões)
+    var soAqui = Object.keys(local).filter(function(k){ return remote.data[k]===undefined; });
     if(remote.ts <= b){
       S.ready[kind] = true;
-      if(isDirty(kind)) schedule(kind, 300);
+      if(isDirty(kind) || soAqui.length){ rawSet('os_sync_'+kind+'_dirty','1'); schedule(kind, 300); }
       return;
     }
     // A nuvem tem algo mais novo que o último sync deste aparelho
@@ -5373,14 +5376,19 @@ var CloudSync = (function(){
     if(!bd){
       // Primeiro sync neste aparelho
       var conflito = Object.keys(remote.data).some(function(k){ return local[k]!==undefined && local[k]!==remote.data[k]; });
-      if(conflito && meaningful(kind, local)){
+      // Só pergunta em aparelho que grava na nuvem; TV/só-leitura sempre segue a nuvem
+      if(conflito && meaningful(kind, local) && canWrite()){
         var nome = kind==='pub' ? 'as metas' : 'os dados do financeiro e da performance';
         var esc1 = await escolher('☁️ Dados diferentes encontrados',
           'Este navegador já tem '+nome+' salvos, e a nuvem tem uma versão diferente.<br><br>'
-          + '<b>Juntar</b> mantém tudo dos dois lados (recomendado).<br><b>Usar a nuvem</b> descarta o que só existe aqui.<br><b>Usar este aparelho</b> substitui a nuvem.',
+          + '<b>Juntar</b> mantém tudo dos dois lados (recomendado).<br><b>Usar a nuvem</b> fica com a versão da nuvem onde os dois têm dado.<br><b>Usar este aparelho</b> substitui a nuvem pelo que está aqui.',
           [{v:'cloud',label:'Usar a nuvem'},{v:'local',label:'Usar este aparelho'},{v:'merge',label:'Juntar',primary:true}]);
         if(esc1==='local'){ S.ready[kind]=true; markSynced(kind, remote.ts, remote.data); rawSet('os_sync_'+kind+'_dirty','1'); schedule(kind, 200); return; }
-        merged = esc1==='cloud' ? remote.data : mergeData(null, local, remote.data, 'remote');
+        if(esc1==='cloud'){
+          // segue a nuvem, mas o que nem existe lá (ex.: Performance nova) continua e sobe
+          merged = {}; soAqui.forEach(function(k){ merged[k] = local[k]; });
+          Object.keys(remote.data).forEach(function(k){ merged[k] = remote.data[k]; });
+        } else merged = mergeData(null, local, remote.data, 'remote');
       } else {
         merged = mergeData(null, local, remote.data, 'remote');
       }
@@ -5435,6 +5443,8 @@ var CloudSync = (function(){
       S.lastPull = Date.now();
       await reconcile('pub', await readRemote('pub', g));
       if(ADMIN_PW) await reconcile('priv', await readRemote('priv', g));
+      try{ var ae = document.activeElement, ta = document.querySelector('.tab-btn.active');
+           if(ta && ta.id==='tab-perf' && !(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) renderPerf(); }catch(e){}
       if(!S.pushing.pub && !S.pushing.priv && !S.timers.pub && !S.timers.priv)
         setStatus(canWrite()?'ok':'local', canWrite() ? 'Sincronizado às '+hhmm() : 'Lendo da nuvem · para salvar nela, configure o GitHub em ⚙');
     }catch(e){
@@ -5476,7 +5486,9 @@ var CloudSync = (function(){
 
   return { boot:boot, pullAll:pullAll, unlock:unlock, canWrite:canWrite, gistId:gistId, touch:touch, patchFile:patchFile,
            getGist:getGist, readFile:readFile, forcePush:forcePush, resetBases:resetBases, hdrs:hdrs,
-           status:function(){ return {status:S.status, msg:S.msg}; }, keys:function(){ return KINDS.pub.keys.concat(KINDS.priv.keys); } };
+           status:function(){ return {status:S.status, msg:S.msg}; },
+           info:function(){ return { lastPull:S.lastPull, pubTs:base('pub'), privTs:base('priv'), canWrite:canWrite() }; },
+           readRemote:readRemote, keys:function(){ return KINDS.pub.keys.concat(KINDS.priv.keys); } };
 })();
 
 // ── Rastreio público: só id embaralhado + etapa (nada de token ou dado de cliente) ──
@@ -5601,7 +5613,8 @@ function _renderConfig(){
     +   '<button class="modal-cancel" onclick="cfgCriarGist()">Criar gist novo</button>'
     +   (tk ? '<button class="modal-cancel" onclick="cfgRemoverToken()">Remover token</button>' : '')
     + '</div>'
-    + '<div id="cfg-test" class="cfg-note"></div></div>'
+    + '<div id="cfg-test" class="cfg-note"></div>'
+    + '<div id="cfg-nuvem" class="cfg-note" style="margin-top:0.4rem;">Conferindo o que tem na nuvem…</div></div>'
     + '<div class="cfg-sec"><div class="cfg-h">💾 Dados</div><div class="cfg-btns">'
     +   '<button class="modal-cancel" onclick="CloudSync.pullAll()">↻ Sincronizar agora</button>'
     +   '<button class="modal-cancel" onclick="exportarDados()">⤓ Baixar backup</button>'
@@ -5612,6 +5625,22 @@ function _renderConfig(){
     +   '<button class="modal-cancel" onclick="cfgTrocarClickUp()">Trocar token do ClickUp</button>'
     + '</div></div>';
   m.classList.add('open');
+  cfgResumoNuvem();
+}
+// Mostra o que está salvo na nuvem agora (ajuda a conferir se este aparelho enviou)
+async function cfgResumoNuvem(){
+  var el = document.getElementById('cfg-nuvem'); if(!el) return;
+  try{
+    var g = await CloudSync.getGist();
+    var pub = await CloudSync.readRemote('pub', g);
+    var quando = function(ts){ return ts>10 ? new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : 'formato antigo'; };
+    if(!pub){ el.innerHTML = '☁️ Na nuvem: <b>nada salvo ainda</b>.'; return; }
+    var perf = null; try{ perf = JSON.parse(pub.data.os_perf_v1||'null'); }catch(e){}
+    var nCol = perf && perf.colabs ? perf.colabs.length : 0;
+    var loc = getPerf().colabs.length;
+    el.innerHTML = '☁️ Na nuvem agora: metas e Performance salvas em <b>'+quando(pub.ts)+'</b> · Performance com <b>'+nCol+'</b> colaborador(es)'
+      + (loc!==nCol ? ' <span style="color:var(--yellow)">(aqui tem '+loc+' — clique em “Forçar envio deste aparelho” se este é o certo)</span>' : ' ✓');
+  }catch(e){ el.textContent = '☁️ Não consegui ler a nuvem agora ('+(e.status||'rede')+').'; }
 }
 async function cfgSalvarGithub(){
   var t = (document.getElementById('cfg-gh-token').value||'').trim();
@@ -6033,6 +6062,13 @@ function cardRanking(perf, ym, ativos, o25){
   return h;
 }
 
+function perfNuvemTxt(){
+  try{
+    var i = CloudSync.info(); if(!i.lastPull) return '';
+    var hm = function(ts){ return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };
+    return ' <span class="pf-nuvem" title="Última vez que esta tela buscou a nuvem">☁ conferido às '+hm(i.lastPull)+(i.pubTs>10?' · dados de '+new Date(i.pubTs).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'')+'</span>';
+  }catch(e){ return ''; }
+}
 // ── Render ──
 function renderPerf(){
   var root = document.getElementById('perf-root');
@@ -6054,7 +6090,7 @@ function renderPerf(){
   // Cabeçalho
   h += '<div class="card pf-head"><div class="pf-head-l">'
     +    '<button class="pf-nav" data-pa="mes" data-d="-1" aria-label="Mês anterior">‹</button>'
-    +    '<div><div class="pf-mes">'+ymLabel(ym)+'</div><div class="pf-mes-sub">'+chip+'</div></div>'
+    +    '<div><div class="pf-mes">'+ymLabel(ym)+'</div><div class="pf-mes-sub">'+chip+perfNuvemTxt()+'</div></div>'
     +    '<button class="pf-nav" data-pa="mes" data-d="1" aria-label="Próximo mês">›</button>'
     +    (ym!==ymAtual() ? '<button class="pf-link" data-pa="hoje">voltar ao mês atual</button>' : '')
     +  '</div><div class="pf-head-r">'
@@ -6064,6 +6100,10 @@ function renderPerf(){
     +    (ADMIN_PW ? '' : '<button class="btn-action" data-pa="editar">🔒 Editar</button>')
     +  '</div></div>';
 
+  // Aviso: quem edita sem token do GitHub não manda nada pra TV
+  if(ADMIN_PW && !CloudSync.canWrite()){
+    h += '<div class="crm-warn">⚠️ Este navegador <b>não está enviando pra nuvem</b> — a TV e os outros computadores não vão ver o que você editar aqui. Cole o token do GitHub em <b>⚙ Configurações</b>.</div>';
+  }
   if(!perf.colabs.length){
     h += '<div class="card pf-empty"><div style="font-size:2rem;">🏆</div><div class="pf-empty-t">Cadastre o time para começar</div>'
       + '<div class="pf-empty-s">Social Media: 3 metas individuais + 1 conjunta (20 pts/mês).<br>Gestor de Tráfego: 4 metas individuais + 1 conjunta (25 pts/mês).<br>Videomaker: 3 metas individuais + 1 conjunta (20 pts/mês).<br>Cada meta vale 5 pontos. Avaliação trimestral: 80%+ Evoluindo · 50–79% Atenção · abaixo de 50% Estagnado.</div>'
