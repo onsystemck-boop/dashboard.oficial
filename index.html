@@ -633,6 +633,9 @@ body.embed-mode .page{padding:0.9rem 1rem;}
 body.embed-compact{zoom:0.8;height:125vh;}
 .pf-meta-r{flex-wrap:wrap;row-gap:0.35rem;}
 .pf-nuvem{font-size:0.6rem;color:var(--muted);margin-left:0.4rem;white-space:nowrap;}
+.eqp-bar{display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;color:var(--muted);font-weight:600;margin-bottom:-0.4rem;flex-wrap:wrap;}
+.eqp-btn{padding:0.22rem 0.7rem;border-radius:100px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--muted2);font-family:'Manrope',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;}
+.eqp-btn.active{border-color:var(--accent);background:rgba(204,0,255,0.15);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -728,6 +731,13 @@ body.embed-compact{zoom:0.8;height:125vh;}
 
 <!-- ══════ PAGE EQUIPE ══════ -->
 <div class="page active" id="page-eq">
+
+  <div class="eqp-bar">
+    <span>👁 Visão:</span>
+    <button class="eqp-btn" data-p="mes" onclick="setEqPeriodo('mes')">📅 Mês atual</button>
+    <button class="eqp-btn" data-p="tudo" onclick="setEqPeriodo('tudo')">🗂 Todo o período</button>
+    <span class="eqp-note" id="eqp-note"></span>
+  </div>
 
   <!-- KPIs -->
   <div class="kpi-row">
@@ -828,7 +838,7 @@ body.embed-compact{zoom:0.8;height:125vh;}
         <div class="wb" id="urg-wid"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="card">
-        <div class="ch"><div class="ct">📊 Conclusão por Membro</div><span class="cs">período atual</span></div>
+        <div class="ch"><div class="ct">📊 Conclusão por Membro</div><span class="cs" id="prog-sub">período atual</span></div>
         <div class="cb" id="prog-wid" style="padding:0.6rem 1rem;"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
@@ -1323,6 +1333,29 @@ function taskInPeriod(t){
   var ini=new Date(); ini.setDate(1); ini.setHours(0,0,0,0);
   return taskDoneTs(t)>=ini.getTime();
 }
+// Visão da aba Equipe: 'mes' (abertas + concluídas no mês) ou 'tudo' (todo o histórico do ClickUp)
+var EQ_PERIODO = (function(){ try{ return localStorage.getItem('eq_periodo_ui')==='tudo' ? 'tudo' : 'mes'; }catch(e){ return 'mes'; } })();
+function eqNaVisao(t){ return EQ_PERIODO==='tudo' ? true : taskInPeriod(t); }
+function aplicarPeriodoEq(){
+  ALL_TASKS = (RAW_TASKS||[]).filter(eqNaVisao);
+  Object.keys(MEMBERS).forEach(function(id){
+    var m = MEMBERS[id]; m.all = m.all || m.tasks || [];
+    m.tasks = m.all.filter(eqNaVisao);
+    m.done = m.tasks.filter(taskIsDone).length;
+  });
+  var tudo = EQ_PERIODO==='tudo';
+  var set = function(id, t){ var e = document.getElementById(id); if(e) e.textContent = t; };
+  set('k-done-s', tudo ? 'em todo o período' : 'neste mês');
+  set('prog-sub', tudo ? 'todo o período' : 'período atual');
+  set('eqp-note', tudo ? 'tudo que está no ClickUp, concluído ou não' : 'abertas + concluídas neste mês');
+  document.querySelectorAll('.eqp-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.p===EQ_PERIODO); });
+}
+function setEqPeriodo(v){
+  EQ_PERIODO = v==='tudo' ? 'tudo' : 'mes';
+  try{ localStorage.setItem('eq_periodo_ui', EQ_PERIODO); }catch(e){}
+  aplicarPeriodoEq();
+  if(RAW_TASKS && RAW_TASKS.length) renderEquipe(ALL_TASKS);
+}
 // Busca todas as páginas de um endpoint de tarefas do ClickUp (100 por página)
 async function apiAllPages(path, maxPages){
   var all=[], sep=path.indexOf('?')>=0?'&':'?';
@@ -1553,7 +1586,7 @@ async function syncEquipe(){
     }
     // Histórico completo (gráfico semanal) + recorte do período atual (abertas + concluídas neste mês)
     RAW_TASKS = RAW;
-    ALL_TASKS = RAW.filter(taskInPeriod);
+    ALL_TASKS = RAW.filter(eqNaVisao);
 
     // 5. Montar MEMBERS — apenas colaboradores reais do time
     MEMBERS = {};
@@ -1561,8 +1594,8 @@ async function syncEquipe(){
     // Lista de exclusão global — contas de sistema/cliente nunca viram card
     const EXCL_GLOBAL = ['onsystem','valle capital','rafael catiste','gilmar forte','meu barco','ana luisa','ana luísa','ana lu','caio moraes','kauanny ribeiro'];
 
-    // Mapear tarefas pelos assignees
-    ALL_TASKS.forEach(t=>{
+    // Mapear tarefas pelos assignees (todo o histórico; a visão Mês/Tudo filtra depois)
+    RAW.forEach(t=>{
       const assignees = t.assignees?.length > 0 ? t.assignees : [];
       assignees.forEach(a=>{
         const id = a.id;
@@ -1572,17 +1605,17 @@ async function syncEquipe(){
         if(EXCL_GLOBAL.some(e => nLow.includes(e))) return;
         if(!MEMBERS[id]){
           MEMBERS[id] = {
-            id, name, tasks:[], done:0,
+            id, name, tasks:[], all:[], done:0,
             avatar: a.profilePicture || a.profile_picture || null
           };
         } else {
           MEMBERS[id].name = name;
           if(a.profilePicture) MEMBERS[id].avatar = a.profilePicture;
         }
-        MEMBERS[id].tasks.push(t);
-        if(taskIsDone(t)) MEMBERS[id].done++;
+        MEMBERS[id].all.push(t);
       });
     });
+    aplicarPeriodoEq();
 
     // 6. Popular filtro de clientes
     const sel = document.getElementById('sel-client');
@@ -1770,7 +1803,7 @@ function renderMembers(){
 
   var _ocultados = JSON.parse(localStorage.getItem('eq_ocultos')||'[]');
   var mems = Object.values(MEMBERS)
-    .filter(function(m){ return !_ocultados.includes(m.name) && !_ocultados.includes(m.id); })
+    .filter(function(m){ return m.tasks.length && !_ocultados.includes(m.name) && !_ocultados.includes(m.id); })
     .sort(function(a,b){ return b.tasks.length - a.tasks.length; });
 
   // Segurança: se tudo ficou oculto, mostrar todos
@@ -1849,7 +1882,7 @@ function renderMembers(){
       + '</div>'
       + '<div class="mc-bar-wrap">'
       +   '<div class="mc-bar"><div class="mc-bar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div>'
-      +   '<div class="mc-pct" style="color:'+bc+'">'+pct+'% concluído no mês</div>'
+      +   '<div class="mc-pct" style="color:'+bc+'">'+pct+(EQ_PERIODO==='tudo'?'% concluído no total':'% concluído no mês')+'</div>'
       + '</div>'
       + taskRows
       + '</div>';
@@ -1896,7 +1929,8 @@ function renderClientTable(tasks){
 
 function renderProgress(){
   const el=document.getElementById('prog-wid');
-  const mems=Object.values(MEMBERS).sort((a,b)=>b.tasks.length-a.tasks.length);
+  const _ocP=getOcultos();
+  const mems=Object.values(MEMBERS).filter(m=>m.tasks.length&&!_ocP.includes(m.name)&&!_ocP.includes(m.id)).sort((a,b)=>b.tasks.length-a.tasks.length);
   if(!mems.length){el.innerHTML='<div class="empty"><span>—</span></div>';return;}
   el.innerHTML=mems.slice(0,6).map(m=>{
     const pct=Math.round(m.done/Math.max(m.tasks.length,1)*100);
@@ -1919,7 +1953,7 @@ function renderEqCharts(tasks){
 
   // Distribuição por membro
   const _ocDist=getOcultos();
-  const mems=Object.values(MEMBERS).filter(m=>!_ocDist.includes(m.name)&&!_ocDist.includes(m.id)).sort((a,b)=>b.tasks.length-a.tasks.length).slice(0,5);
+  const mems=Object.values(MEMBERS).filter(m=>m.tasks.length&&!_ocDist.includes(m.name)&&!_ocDist.includes(m.id)).sort((a,b)=>b.tasks.length-a.tasks.length).slice(0,5);
   if(chartDistInst)chartDistInst.destroy();
   chartDistInst=new Chart(document.getElementById('chartDist'),{
     type:'pie',
@@ -4972,7 +5006,7 @@ function initEmbed(tab, compacto){
   var setup = document.getElementById('setup-screen'); if(setup) setup.style.display = 'none';
   showApp();
   var ck = document.getElementById('os-clock'); if(ck) ck.style.display = 'none';
-  try{ iniciarPeriodoAtual(); }catch(e){}
+  try{ iniciarPeriodoAtual(); aplicarPeriodoEq(); }catch(e){}
   if(_embedCopiar()){
     _embedRender();
   } else {
@@ -5071,6 +5105,7 @@ window.onload = function(){
   // Modo normal dashboard
   // eq_ocultos preservado intencionalmente — preferências de visibilidade persistem entre reloads
   try{ iniciarPeriodoAtual(); }catch(e){ console.warn(e); }
+  try{ aplicarPeriodoEq(); }catch(e){}
   try{ startAutoRefresh(); }catch(e){}
   try{ atualizarDescMeta(); }catch(e){}
   try{ CloudSync.boot(); }catch(e){ console.warn(e); }
@@ -5913,7 +5948,7 @@ function perfClickup(c, ym){
   if(!c.cuId || typeof MEMBERS==='undefined' || !MEMBERS[c.cuId]) return null;
   var mem = MEMBERS[c.cuId], ini = new Date(+ym.slice(0,4), +ym.slice(5,7)-1, 1).getTime(), fim = new Date(+ym.slice(0,4), +ym.slice(5,7), 1).getTime();
   var feitas = 0, atras = 0, agora = Date.now();
-  mem.tasks.forEach(function(t){
+  (mem.all || mem.tasks).forEach(function(t){
     if(taskIsDone(t)){ var ts = taskDoneTs(t); if(ts>=ini && ts<fim) feitas++; }
     else if(t.due_date && +t.due_date < agora) atras++;
   });
